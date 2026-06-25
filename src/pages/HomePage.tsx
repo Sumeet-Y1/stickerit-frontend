@@ -5,7 +5,7 @@ import WaveDivider from '../components/WaveDivider';
 import { useAuth } from '../context/AuthContext';
 import { useLoginPrompt } from '../context/LoginPromptContext';
 import { useStickerInteractions } from '../hooks/useStickerInteractions';
-import { authUrl, demoStickers, shareUrl, stickerDownloadUrl, type StickerResponse } from '../lib/backend';
+import { authUrl, demoStickers, downloadStickerFile, shareUrl, type StickerResponse } from '../lib/backend';
 import { toast } from 'sonner';
 
 const colors = {
@@ -142,7 +142,7 @@ export default function HomePage() {
                 onLike={() => handleLike(sticker)}
                 onSave={() => handleSave(sticker)}
                 onShare={() => handleShare(sticker)}
-                onDownload={() => window.open(sticker.downloadUrl || stickerDownloadUrl(sticker.id), '_blank', 'noopener,noreferrer')}
+                onDownload={() => downloadStickerFile(sticker)}
                 onOpen={() => navigate(`/sticker/${sticker.id}`)}
                 accentIndex={index}
               />

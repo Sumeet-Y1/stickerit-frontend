@@ -6,7 +6,7 @@ import SkeletonCard from '../components/SkeletonCard';
 import { useAuth } from '../context/AuthContext';
 import { useLoginPrompt } from '../context/LoginPromptContext';
 import { useStickerInteractions } from '../hooks/useStickerInteractions';
-import { demoStickers, getStickerFeed, shareUrl, stickerDownloadUrl, type StickerResponse } from '../lib/backend';
+import { demoStickers, downloadStickerFile, getStickerFeed, shareUrl, type StickerResponse } from '../lib/backend';
 import { toast } from 'sonner';
 
 export default function ProfilePage() {
@@ -155,7 +155,7 @@ export default function ProfilePage() {
                       onLike={() => toggleLike(item.id)}
                       onSave={() => toggleSave(item.id)}
                       onShare={() => navigator.clipboard.writeText(shareUrl(item.shareToken))}
-                      onDownload={() => window.open(item.downloadUrl || stickerDownloadUrl(item.id), '_blank', 'noopener,noreferrer')}
+                      onDownload={() => downloadStickerFile(item)}
                       onOpen={() => navigate(`/sticker/${item.id}`)}
                     />
                   </div>
@@ -181,7 +181,7 @@ export default function ProfilePage() {
                       onLike={() => toggleLike(item.id)}
                       onSave={() => toggleSave(item.id)}
                       onShare={() => navigator.clipboard.writeText(shareUrl(item.shareToken))}
-                      onDownload={() => window.open(item.downloadUrl || stickerDownloadUrl(item.id), '_blank', 'noopener,noreferrer')}
+                      onDownload={() => downloadStickerFile(item)}
                       onOpen={() => navigate(`/sticker/${item.id}`)}
                     />
                   </div>

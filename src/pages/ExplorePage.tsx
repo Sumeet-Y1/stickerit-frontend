@@ -10,10 +10,10 @@ import { useStickerInteractions } from '../hooks/useStickerInteractions';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import {
   demoStickers,
+  downloadStickerFile,
   getStickerFeed,
   searchStickers,
   shareUrl,
-  stickerDownloadUrl,
   type StickerResponse,
 } from '../lib/backend';
 import { toast } from 'sonner';
@@ -256,7 +256,7 @@ export default function ExplorePage() {
                       onLike={() => handleLike(sticker)}
                       onSave={() => handleSave(sticker)}
                       onShare={() => handleShare(sticker)}
-                      onDownload={() => window.open(sticker.downloadUrl || stickerDownloadUrl(sticker.id), '_blank', 'noopener,noreferrer')}
+                      onDownload={() => downloadStickerFile(sticker)}
                       onOpen={() => navigate(`/sticker/${sticker.id}`)}
                       accentIndex={index}
                     />

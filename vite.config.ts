@@ -13,12 +13,12 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'https://stickit-xgbh.onrender.com',
+        target: 'https://stickit-1.onrender.com',
         changeOrigin: true,
         secure: true,
       },
       '/oauth2': {
-        target: 'https://stickit-xgbh.onrender.com',
+        target: 'https://stickit-1.onrender.com',
         changeOrigin: true,
         secure: true,
       },

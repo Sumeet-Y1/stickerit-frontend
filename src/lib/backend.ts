@@ -1,4 +1,4 @@
-const DEFAULT_API_ORIGIN = 'https://stickit-xgbh.onrender.com';
+const DEFAULT_API_ORIGIN = 'https://stickit-1.onrender.com';
 
 export { demoStickers } from '../data/mockStickers';
 
@@ -194,6 +194,44 @@ export const stickerDownloadUrl = (stickerId: string) => publicUrl(`/api/sticker
 export const shareUrl = (token: string) => (hasWindow ? `${window.location.origin}/s/${token}` : `/s/${token}`);
 
 export const authUrl = (provider: AuthProvider) => publicUrl(`/oauth2/authorization/${provider}`);
+
+export const downloadStickerFile = async (sticker: Pick<StickerResponse, 'id' | 'name' | 'originalFilename'>) => {
+  if (!hasWindow) return;
+
+  const filename = sticker.originalFilename || `${sticker.name || 'sticker'}.png`;
+  const url = stickerDownloadUrl(sticker.id);
+
+  try {
+    const response = await fetch(url, {
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Download failed (${response.status})`);
+    }
+
+    const blob = await response.blob();
+    const objectUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(objectUrl);
+    return;
+  } catch {
+    // If the browser blocks blob download for any reason, still hit the backend endpoint.
+  }
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.rel = 'noopener noreferrer';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+};
 
 const parseJson = async <T>(response: Response): Promise<T> => {
   const payload = (await response.json()) as ApiResponse<T>;

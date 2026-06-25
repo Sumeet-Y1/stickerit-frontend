@@ -8,11 +8,11 @@ import { useLoginPrompt } from '../context/LoginPromptContext';
 import { useStickerInteractions } from '../hooks/useStickerInteractions';
 import {
   demoStickers,
+  downloadStickerFile,
   getStickerById,
   getStickerFeed,
   resolveSharedSticker,
   shareUrl,
-  stickerDownloadUrl,
   toReadableDate,
   toReadableSize,
   type StickerResponse,
@@ -112,7 +112,7 @@ export default function StickerDetailPage({ tokenMode = false }: StickerDetailPa
 
   const handleDownload = () => {
     if (!sticker) return;
-    window.open(sticker.downloadUrl || stickerDownloadUrl(sticker.id), '_blank', 'noopener,noreferrer');
+    downloadStickerFile(sticker);
   };
 
   const handleLike = () => {
@@ -297,7 +297,7 @@ export default function StickerDetailPage({ tokenMode = false }: StickerDetailPa
                         onLike={() => handleRelatedLike(item)}
                         onSave={() => handleRelatedSave(item)}
                         onShare={() => handleRelatedShare(item)}
-                        onDownload={() => window.open(item.downloadUrl || stickerDownloadUrl(item.id), '_blank', 'noopener,noreferrer')}
+                        onDownload={() => downloadStickerFile(item)}
                         onOpen={() => navigate(`/sticker/${item.id}`)}
                       />
                     </div>
