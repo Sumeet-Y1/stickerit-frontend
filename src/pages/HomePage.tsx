@@ -43,27 +43,53 @@ export default function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <a
-                href={authUrl('github')}
-                className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-black px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[5px_5px_0_#fff] transition-transform hover:-translate-y-1"
-              >
-                <Github size={18} />
-                GitHub login
-              </a>
-              <a
-                href={authUrl('google')}
-                className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-white px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-[5px_5px_0_#111] transition-transform hover:-translate-y-1"
-              >
-                <Chrome size={18} />
-                Google login
-              </a>
-              <Link
-                to="/explore"
-                className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-[#78e5bd] px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-[5px_5px_0_#111] transition-transform hover:-translate-y-1"
-              >
-                <Search size={18} />
-                Explore
-              </Link>
+              {authenticated ? (
+                <>
+                  <Link
+                    to="/explore"
+                    className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-[#78e5bd] px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-[5px_5px_0_#111] transition-transform hover:-translate-y-1"
+                  >
+                    <Search size={18} />
+                    Explore
+                  </Link>
+                  <Link
+                    to="/profile"
+                    className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-[#ffd044] px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-[5px_5px_0_#111] transition-transform hover:-translate-y-1"
+                  >
+                    Profile
+                  </Link>
+                  <Link
+                    to="/upload"
+                    className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-[#ef84d8] px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-[5px_5px_0_#111] transition-transform hover:-translate-y-1"
+                  >
+                    Upload
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <a
+                    href={authUrl('github')}
+                    className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-black px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[5px_5px_0_#fff] transition-transform hover:-translate-y-1"
+                  >
+                    <Github size={18} />
+                    GitHub login
+                  </a>
+                  <a
+                    href={authUrl('google')}
+                    className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-white px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-[5px_5px_0_#111] transition-transform hover:-translate-y-1"
+                  >
+                    <Chrome size={18} />
+                    Google login
+                  </a>
+                  <Link
+                    to="/explore"
+                    className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-[#78e5bd] px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-[5px_5px_0_#111] transition-transform hover:-translate-y-1"
+                  >
+                    <Search size={18} />
+                    Explore
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 

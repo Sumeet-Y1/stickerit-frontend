@@ -8,15 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLoginPrompt } from '../context/LoginPromptContext';
 import { useStickerInteractions } from '../hooks/useStickerInteractions';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
-import {
-  demoStickers,
-  downloadStickerFile,
-  getStickerFeed,
-  mergeRecentUploads,
-  searchStickers,
-  shareUrl,
-  type StickerResponse,
-} from '../lib/backend';
+import { downloadStickerFile, getStickerFeed, mergeRecentUploads, readRecentUploads, searchStickers, shareUrl, type StickerResponse } from '../lib/backend';
 import { toast } from 'sonner';
 
 const DEFAULT_CATEGORIES = ['All', 'Meme', 'Chaos', 'Reaction', 'Cute', 'Weird'];
@@ -76,12 +68,12 @@ export default function ExplorePage() {
         } else {
           const response = await getStickerFeed(0, PAGE_SIZE);
           if (cancelled || !mountedRef.current) return;
-          setStickers(mergeRecentUploads(response.content.length > 0 ? response.content : demoStickers));
+          setStickers(mergeRecentUploads(response.content));
           setHasMore(Boolean(response.last === false && response.content.length >= PAGE_SIZE));
         }
       } catch (requestError) {
         if (cancelled || !mountedRef.current) return;
-        setStickers(mergeRecentUploads(demoStickers));
+        setStickers(readRecentUploads());
         setHasMore(false);
       } finally {
         if (!cancelled && mountedRef.current) {
@@ -268,7 +260,9 @@ export default function ExplorePage() {
           ) : (
             <div className="rounded-[2rem] border-[3px] border-black bg-white p-10 text-center shadow-[8px_8px_0_#111]">
               <h3 className="text-4xl font-black uppercase">No stickers found</h3>
-              <p className="mt-3 text-base font-bold text-black/65">Try a different search or clear the filters.</p>
+              <p className="mt-3 text-base font-bold text-black/65">
+                The public feed is empty right now. Upload a sticker or try again once the API responds.
+              </p>
             </div>
           )}
         </div>
