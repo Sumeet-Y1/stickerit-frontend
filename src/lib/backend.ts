@@ -239,6 +239,29 @@ export const readOAuthSessionFromLocation = (): AuthSession | null => {
   };
 };
 
+const base64UrlToJson = (value: string) => {
+  const padded = value.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=');
+  return JSON.parse(atob(padded));
+};
+
+export const getJwtExpirationMs = (token?: string | null) => {
+  if (!token) return null;
+  const parts = token.split('.');
+  if (parts.length < 2) return null;
+  try {
+    const payload = base64UrlToJson(parts[1]) as { exp?: number };
+    return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+};
+
+export const isJwtExpiringSoon = (token?: string | null, skewSeconds = 60) => {
+  const expMs = getJwtExpirationMs(token);
+  if (!expMs) return false;
+  return expMs - Date.now() <= skewSeconds * 1000;
+};
+
 export const clearOAuthSessionFromLocation = () => {
   if (!hasWindow || (!window.location.hash && !window.location.search)) return;
 

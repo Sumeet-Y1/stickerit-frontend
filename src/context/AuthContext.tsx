@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import {
   clearOAuthSessionFromLocation,
   consumeReturnTo,
+  isJwtExpiringSoon,
   loginWithPassword,
   logoutSession,
   readSession,
@@ -54,9 +55,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const current = readSession();
       if (current) {
+        if (!isJwtExpiringSoon(current.accessToken, 90)) {
+          if (mounted) {
+            setSession(current);
+            setReady(true);
+          }
+          return;
+        }
+
         const refreshed = await refreshSession();
         if (mounted) {
-          setSession(refreshed ?? null);
+          setSession(refreshed ?? current);
           setReady(true);
         }
         return;
