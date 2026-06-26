@@ -44,15 +44,14 @@ export default function ProfilePage() {
 
     void run();
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    return subscribeStickerCreated((sticker) => {
+    const unsubscribe = subscribeStickerCreated((sticker) => {
       setUploads((current) => mergeRecentUploads([sticker, ...current]));
     });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, []);
 
   const username = session?.user.email?.split('@')[0] || 'guest';
@@ -159,9 +158,9 @@ export default function ProfilePage() {
                 ))}
               </div>
             ) : myUploads.length > 0 ? (
-              <div className="columns-1 gap-4 md:columns-2 xl:columns-3">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {myUploads.map((item) => (
-                  <div key={item.id} className="mb-4 break-inside-avoid">
+                  <div key={item.id} className="h-full">
                     <StickerCard
                       sticker={item}
                       liked={likedIds.includes(item.id)}
@@ -170,7 +169,11 @@ export default function ProfilePage() {
                       onSave={() => toggleSave(item.id)}
                       onShare={() => navigator.clipboard.writeText(shareUrl(item.shareToken))}
                       onDownload={() => downloadStickerFile(item)}
-                      onOpen={() => navigate(`/sticker/${item.id}`)}
+                      onOpen={() =>
+                        navigate(`/sticker/${item.id}`, {
+                          state: { backgroundLocation: location },
+                        })
+                      }
                     />
                   </div>
                 ))}
@@ -185,9 +188,9 @@ export default function ProfilePage() {
           <section>
             <h2 className="mb-5 text-2xl font-black uppercase tracking-tight">Saved stickers</h2>
             {mySaved.length > 0 ? (
-              <div className="columns-1 gap-4 md:columns-2 xl:columns-3">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {mySaved.map((item) => (
-                  <div key={item.id} className="mb-4 break-inside-avoid">
+                  <div key={item.id} className="h-full">
                     <StickerCard
                       sticker={item}
                       liked={likedIds.includes(item.id)}
@@ -196,7 +199,11 @@ export default function ProfilePage() {
                       onSave={() => toggleSave(item.id)}
                       onShare={() => navigator.clipboard.writeText(shareUrl(item.shareToken))}
                       onDownload={() => downloadStickerFile(item)}
-                      onOpen={() => navigate(`/sticker/${item.id}`)}
+                      onOpen={() =>
+                        navigate(`/sticker/${item.id}`, {
+                          state: { backgroundLocation: location },
+                        })
+                      }
                     />
                   </div>
                 ))}

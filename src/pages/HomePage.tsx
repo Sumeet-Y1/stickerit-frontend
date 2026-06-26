@@ -1,12 +1,9 @@
 import { Link, useLocation, useNavigate } from 'react-router';
-import { Chrome, Download, Github, Search, Share2, Sparkles, UploadCloud, UserRound } from 'lucide-react';
-import StickerCard from '../components/StickerCard';
+import { Chrome, Download, Github, Search, Share2, Sparkles, UploadCloud } from 'lucide-react';
 import WaveDivider from '../components/WaveDivider';
 import { useAuth } from '../context/AuthContext';
 import { useLoginPrompt } from '../context/LoginPromptContext';
-import { useStickerInteractions } from '../hooks/useStickerInteractions';
-import { authUrl, demoStickers, downloadStickerFile, shareUrl, type StickerResponse } from '../lib/backend';
-import { toast } from 'sonner';
+import { authUrl, demoStickers } from '../lib/backend';
 
 const colors = {
   pink: '#ef84d8',
@@ -24,35 +21,9 @@ export default function HomePage() {
   const location = useLocation();
   const { authenticated } = useAuth();
   const { openLoginPrompt } = useLoginPrompt();
-  const { likedIds, savedIds, toggleLike, toggleSave } = useStickerInteractions();
 
   const promptLogin = (message: string, returnTo = `${location.pathname}${location.search}${location.hash}`) => {
     openLoginPrompt(message, returnTo);
-  };
-
-  const handleLike = (sticker: StickerResponse) => {
-    if (!authenticated) {
-      promptLogin('Login to like stickers and keep your favorites.');
-      return;
-    }
-    toggleLike(sticker.id);
-  };
-
-  const handleSave = (sticker: StickerResponse) => {
-    if (!authenticated) {
-      promptLogin('Login to save stickers into your stash.');
-      return;
-    }
-    toggleSave(sticker.id);
-  };
-
-  const handleShare = async (sticker: StickerResponse) => {
-    try {
-      await navigator.clipboard.writeText(shareUrl(sticker.shareToken));
-      toast.success('Share link copied');
-    } catch {
-      toast.error('Could not share this sticker');
-    }
   };
 
   return (
@@ -72,48 +43,20 @@ export default function HomePage() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              {authenticated ? (
-                <>
-                  <Link
-                    to="/explore"
-                    className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-[#78e5bd] px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-[5px_5px_0_#111] transition-transform hover:-translate-y-1"
-                  >
-                    <Search size={18} />
-                    Explore
-                  </Link>
-                  <Link
-                    to="/upload"
-                    className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-[#ef84d8] px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-[5px_5px_0_#111] transition-transform hover:-translate-y-1"
-                  >
-                    <UploadCloud size={18} />
-                    Upload
-                  </Link>
-                  <Link
-                    to="/profile"
-                    className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-white px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-[5px_5px_0_#111] transition-transform hover:-translate-y-1"
-                  >
-                    <UserRound size={18} />
-                    Profile
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <a
-                    href={authUrl('github')}
-                    className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-black px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[5px_5px_0_#fff] transition-transform hover:-translate-y-1"
-                  >
-                    <Github size={18} />
-                    GitHub login
-                  </a>
-                  <a
-                    href={authUrl('google')}
-                    className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-white px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-[5px_5px_0_#111] transition-transform hover:-translate-y-1"
-                  >
-                    <Chrome size={18} />
-                    Google login
-                  </a>
-                </>
-              )}
+              <a
+                href={authUrl('github')}
+                className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-black px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-white shadow-[5px_5px_0_#fff] transition-transform hover:-translate-y-1"
+              >
+                <Github size={18} />
+                GitHub login
+              </a>
+              <a
+                href={authUrl('google')}
+                className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-white px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-[5px_5px_0_#111] transition-transform hover:-translate-y-1"
+              >
+                <Chrome size={18} />
+                Google login
+              </a>
               <Link
                 to="/explore"
                 className="inline-flex items-center gap-2 rounded-full border-[3px] border-black bg-[#78e5bd] px-5 py-3 text-sm font-black uppercase tracking-[0.08em] text-black shadow-[5px_5px_0_#111] transition-transform hover:-translate-y-1"
@@ -144,36 +87,30 @@ export default function HomePage() {
       <WaveDivider fromColor={colors.pink} toColor={colors.yellow} />
 
       <section className="bg-[#ffd044] px-4 py-14 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-[1280px]">
-          <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h2 className="text-4xl font-black uppercase leading-none sm:text-6xl">Trending stickers</h2>
-              <p className="mt-3 max-w-2xl text-lg font-bold text-black/70">
-                Fast picks from the feed, ready to download or throw into the chat.
-              </p>
-            </div>
-            <Link
-              to="/explore"
-              className="rounded-full border-[3px] border-black bg-white px-5 py-3 text-sm font-black uppercase tracking-[0.08em] shadow-[5px_5px_0_#111] transition-transform hover:-translate-y-1"
-            >
-              View all
-            </Link>
+        <div className="mx-auto grid max-w-[1280px] gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div>
+            <h2 className="text-4xl font-black uppercase leading-none sm:text-6xl">Not a boring trending strip.</h2>
+            <p className="mt-4 max-w-2xl text-lg font-bold text-black/70">
+              StickerIT is built around chaos lanes, not a generic top-four feed. Jump into a category, search by mood, or
+              open the wall and let the newest uploads pin themselves to the top.
+            </p>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {demoStickers.slice(0, 4).map((sticker, index) => (
-              <StickerCard
-                key={sticker.id}
-                sticker={sticker}
-                liked={likedIds.includes(sticker.id)}
-                saved={savedIds.includes(sticker.id)}
-                onLike={() => handleLike(sticker)}
-                onSave={() => handleSave(sticker)}
-                onShare={() => handleShare(sticker)}
-                onDownload={() => downloadStickerFile(sticker)}
-                onOpen={() => navigate(`/sticker/${sticker.id}`)}
-                accentIndex={index}
-              />
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              { title: 'Fresh drops', text: 'Newest uploads stay visible as soon as they land.', color: '#fff7e8' },
+              { title: 'Chaos lanes', text: 'Browse by reaction, meme, weird, or cute energy.', color: '#78e5bd' },
+              { title: 'Quick download', text: 'Grab the sticker file directly with one tap.', color: '#8eb9ff' },
+              { title: 'Login when needed', text: 'Guests can browse first, then sign in for saves and likes.', color: '#ef84d8' },
+            ].map((card) => (
+              <div
+                key={card.title}
+                className="rounded-[2rem] border-[3px] border-black p-6 shadow-[7px_7px_0_#111]"
+                style={{ background: card.color }}
+              >
+                <h3 className="text-2xl font-black uppercase">{card.title}</h3>
+                <p className="mt-3 text-base font-bold text-black/70">{card.text}</p>
+              </div>
             ))}
           </div>
         </div>

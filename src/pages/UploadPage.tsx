@@ -59,7 +59,9 @@ export default function UploadPage() {
 
       rememberRecentUpload(next);
       toast.success('Sticker uploaded');
-      navigate(`/sticker/${next.id}`);
+      navigate(`/sticker/${next.id}`, {
+        state: { backgroundLocation: location },
+      });
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Upload failed');
       toast.error('Upload failed');
@@ -184,7 +186,7 @@ export default function UploadPage() {
                 <li>- Pick a sticker or meme image that reads instantly.</li>
                 <li>- Keep the filename clean. The backend validates it.</li>
                 <li>- Tags help the feed and search actually work.</li>
-                <li>- Once uploaded, you&apos;ll land on the sticker detail page.</li>
+                <li>- Once uploaded, you&apos;ll land in a popup detail view.</li>
               </ul>
             </div>
 

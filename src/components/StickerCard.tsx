@@ -1,4 +1,3 @@
-import { Link } from 'react-router';
 import { Bookmark, Download, Heart, Share2 } from 'lucide-react';
 import type { StickerResponse } from '../lib/backend';
 
@@ -78,12 +77,13 @@ export default function StickerCard({
       </button>
 
       <div className="flex items-center gap-2 border-t-2 border-black bg-[#fff8ef] p-3">
-        <Link
-          to={`/sticker/${sticker.id}`}
+        <button
+          type="button"
+          onClick={onOpen}
           className="flex-1 rounded-full border-2 border-black bg-[#ffcf5a] px-3 py-2 text-center text-[11px] font-black uppercase tracking-[0.24em] text-black transition-transform hover:-translate-y-0.5"
         >
           View
-        </Link>
+        </button>
         <button
           type="button"
           onClick={(event) => {

@@ -14,7 +14,6 @@ import {
   mergeRecentUploads,
   searchStickers,
   shareUrl,
-  subscribeStickerCreated,
   type StickerResponse,
 } from '../lib/backend';
 import { toast } from 'sonner';
@@ -58,16 +57,6 @@ export default function ExplorePage() {
     return () => {
       mountedRef.current = false;
     };
-  }, []);
-
-  useEffect(() => {
-    setStickers((current) => mergeRecentUploads(current));
-  }, []);
-
-  useEffect(() => {
-    return subscribeStickerCreated((sticker) => {
-      setStickers((current) => mergeRecentUploads([sticker, ...current]));
-    });
   }, []);
 
   useEffect(() => {
@@ -245,7 +234,7 @@ export default function ExplorePage() {
         <div className="mx-auto max-w-[1280px]">
           {error && (
             <div className="mb-6 rounded-[1.5rem] border-[3px] border-black bg-[#ef84d8] px-5 py-4 text-sm font-black shadow-[5px_5px_0_#111]">
-              Feed is having a hiccup. Your recent uploads stay pinned to the top.
+              Showing recent uploads while the API wakes up.
             </div>
           )}
 
@@ -257,9 +246,9 @@ export default function ExplorePage() {
             </div>
           ) : filtered.length > 0 ? (
             <>
-              <div className="columns-1 gap-5 md:columns-2 xl:columns-3 2xl:columns-4">
+              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {filtered.map((sticker, index) => (
-                  <div key={sticker.id} className="mb-5 break-inside-avoid">
+                  <div key={sticker.id} className="h-full">
                     <StickerCard
                       sticker={sticker}
                       liked={likedIds.includes(sticker.id)}
@@ -268,7 +257,11 @@ export default function ExplorePage() {
                       onSave={() => handleSave(sticker)}
                       onShare={() => handleShare(sticker)}
                       onDownload={() => downloadStickerFile(sticker)}
-                      onOpen={() => navigate(`/sticker/${sticker.id}`)}
+                      onOpen={() =>
+                        navigate(`/sticker/${sticker.id}`, {
+                          state: { backgroundLocation: location },
+                        })
+                      }
                       accentIndex={index}
                     />
                   </div>

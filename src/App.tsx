@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router';
+import { Navigate, Route, Routes, useLocation, useNavigate, type Location } from 'react-router';
 import { Toaster } from 'sonner';
 import LoginModal from './components/LoginModal';
 import { useAuth } from './context/AuthContext';
@@ -47,11 +47,15 @@ function LoginPromptLayer() {
 }
 
 export default function App() {
+  const location = useLocation();
+  const state = location.state as { backgroundLocation?: Location } | null;
+  const backgroundLocation = state?.backgroundLocation;
+
   return (
     <div className="min-h-screen bg-[#fff7e8] text-black">
       <OAuthReturnSync />
       <Navbar />
-      <Routes>
+      <Routes location={backgroundLocation || location}>
         <Route path="/" element={<HomePage />} />
         <Route path="/explore" element={<ExplorePage />} />
         <Route path="/sticker/:id" element={<StickerDetailPage />} />
@@ -61,6 +65,12 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      {backgroundLocation && (
+        <Routes>
+          <Route path="/sticker/:id" element={<StickerDetailPage />} />
+          <Route path="/s/:token" element={<StickerDetailPage tokenMode />} />
+        </Routes>
+      )}
       <LoginPromptLayer />
       <Toaster
         position="top-right"
