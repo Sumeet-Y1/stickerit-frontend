@@ -171,7 +171,7 @@ export default function ProfilePage() {
                       onDownload={() => downloadStickerFile(item)}
                       onOpen={() =>
                         navigate(`/sticker/${item.id}`, {
-                          state: { backgroundLocation: location },
+                          state: { backgroundLocation: location, sticker: item },
                         })
                       }
                     />
@@ -201,7 +201,7 @@ export default function ProfilePage() {
                       onDownload={() => downloadStickerFile(item)}
                       onOpen={() =>
                         navigate(`/sticker/${item.id}`, {
-                          state: { backgroundLocation: location },
+                          state: { backgroundLocation: location, sticker: item },
                         })
                       }
                     />

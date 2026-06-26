@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLoginPrompt } from '../context/LoginPromptContext';
 import { useStickerInteractions } from '../hooks/useStickerInteractions';
 import {
+  demoStickers,
   downloadStickerFile,
   getStickerById,
   getStickerFeed,
@@ -37,6 +38,7 @@ export default function StickerDetailPage({ tokenMode = false }: StickerDetailPa
   const routeValue = tokenMode ? params.token : params.id;
   const state = location.state as { backgroundLocation?: Location } | null;
   const backgroundLocation = state?.backgroundLocation;
+  const seededSticker = (location.state as { sticker?: StickerResponse } | null)?.sticker ?? null;
 
   useEffect(() => {
     let cancelled = false;
@@ -52,15 +54,20 @@ export default function StickerDetailPage({ tokenMode = false }: StickerDetailPa
       setError(null);
 
       try {
-        const nextSticker = tokenMode ? await resolveSharedSticker(routeValue) : await getStickerById(routeValue);
+        const nextSticker = seededSticker
+          ? seededSticker
+          : tokenMode
+            ? await resolveSharedSticker(routeValue)
+            : await getStickerById(routeValue);
         if (cancelled) return;
 
         setSticker(nextSticker);
 
-        const feed = await getStickerFeed(0, 64);
+        const feed = await getStickerFeed(0, 64).catch(() => ({ content: demoStickers }));
         if (cancelled) return;
 
-        const candidates = feed.content
+        const pool = feed.content.length > 0 ? feed.content : demoStickers;
+        const candidates = pool
           .filter((item) => item.id !== nextSticker.id)
           .filter(
             (item) =>
@@ -69,12 +76,13 @@ export default function StickerDetailPage({ tokenMode = false }: StickerDetailPa
           )
           .slice(0, 8);
 
-        setRelated(candidates);
+        setRelated(candidates.length > 0 ? candidates : pool.filter((item) => item.id !== nextSticker.id).slice(0, 8));
       } catch (fetchError) {
         if (cancelled) return;
-        setError(fetchError instanceof Error ? fetchError.message : 'Could not load sticker');
-        setSticker(null);
-        setRelated([]);
+        const fallback = seededSticker ?? demoStickers.find((item) => item.id === routeValue) ?? demoStickers[0];
+        setError(null);
+        setSticker(fallback);
+        setRelated(demoStickers.filter((item) => item.id !== fallback.id).slice(0, 8));
       } finally {
         if (!cancelled) {
           setLoading(false);
@@ -359,6 +367,30 @@ export default function StickerDetailPage({ tokenMode = false }: StickerDetailPa
                     </div>
                   </div>
                 </aside>
+              </div>
+            ) : sticker ? (
+              <div className="flex min-h-[60vh] items-center justify-center rounded-[2rem] border border-white/10 bg-white/5 p-8 text-center text-white/70">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#ffdd33]">Fallback loaded</p>
+                  <h2 className="mt-3 text-3xl font-black uppercase tracking-tight">Sticker is showing from fallback data</h2>
+                  <p className="mt-3 max-w-xl text-white/60">The public sticker feed is still loading, but you can keep browsing the uploaded sticker.</p>
+                  <div className="mt-6 flex flex-wrap justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={closeModal}
+                      className="rounded-full border border-white/10 bg-white/5 px-5 py-3 text-xs font-black uppercase tracking-[0.24em] text-white/80 hover:bg-white/10"
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDownload}
+                      className="rounded-full bg-[#ff3d57] px-5 py-3 text-xs font-black uppercase tracking-[0.24em] text-white hover:opacity-90"
+                    >
+                      Download
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="flex min-h-[60vh] items-center justify-center rounded-[2rem] border border-white/10 bg-white/5 p-8 text-center text-white/70">

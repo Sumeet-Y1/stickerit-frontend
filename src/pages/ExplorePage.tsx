@@ -9,6 +9,7 @@ import { useLoginPrompt } from '../context/LoginPromptContext';
 import { useStickerInteractions } from '../hooks/useStickerInteractions';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import {
+  demoStickers,
   downloadStickerFile,
   getStickerFeed,
   mergeRecentUploads,
@@ -49,7 +50,6 @@ export default function ExplorePage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
-  const [error, setError] = useState<string | null>(null);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -65,7 +65,6 @@ export default function ExplorePage() {
 
     const run = async () => {
       setLoading(true);
-      setError(null);
       setPage(0);
 
       try {
@@ -77,14 +76,13 @@ export default function ExplorePage() {
         } else {
           const response = await getStickerFeed(0, PAGE_SIZE);
           if (cancelled || !mountedRef.current) return;
-          setStickers(mergeRecentUploads(response.content));
+          setStickers(mergeRecentUploads(response.content.length > 0 ? response.content : demoStickers));
           setHasMore(Boolean(response.last === false && response.content.length >= PAGE_SIZE));
         }
       } catch (requestError) {
         if (cancelled || !mountedRef.current) return;
-        setStickers(mergeRecentUploads([]));
+        setStickers(mergeRecentUploads(demoStickers));
         setHasMore(false);
-        setError(requestError instanceof Error ? requestError.message : 'Sticker feed unavailable');
       } finally {
         if (!cancelled && mountedRef.current) {
           setLoading(false);
@@ -232,12 +230,6 @@ export default function ExplorePage() {
 
       <section className="px-4 pb-20 pt-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[1280px]">
-          {error && (
-            <div className="mb-6 rounded-[1.5rem] border-[3px] border-black bg-[#ef84d8] px-5 py-4 text-sm font-black shadow-[5px_5px_0_#111]">
-              Showing recent uploads while the API wakes up.
-            </div>
-          )}
-
           {loading ? (
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {Array.from({ length: 12 }).map((_, index) => (
@@ -259,7 +251,7 @@ export default function ExplorePage() {
                       onDownload={() => downloadStickerFile(sticker)}
                       onOpen={() =>
                         navigate(`/sticker/${sticker.id}`, {
-                          state: { backgroundLocation: location },
+                          state: { backgroundLocation: location, sticker },
                         })
                       }
                       accentIndex={index}
