@@ -6,7 +6,15 @@ import SkeletonCard from '../components/SkeletonCard';
 import { useAuth } from '../context/AuthContext';
 import { useLoginPrompt } from '../context/LoginPromptContext';
 import { useStickerInteractions } from '../hooks/useStickerInteractions';
-import { demoStickers, downloadStickerFile, getStickerFeed, shareUrl, type StickerResponse } from '../lib/backend';
+import {
+  downloadStickerFile,
+  getStickerFeed,
+  mergeRecentUploads,
+  readRecentUploads,
+  shareUrl,
+  subscribeStickerCreated,
+  type StickerResponse,
+} from '../lib/backend';
 import { toast } from 'sonner';
 
 export default function ProfilePage() {
@@ -25,10 +33,10 @@ export default function ProfilePage() {
       try {
         const response = await getStickerFeed(0, 100);
         if (cancelled) return;
-        setUploads(response.content);
+        setUploads(mergeRecentUploads(response.content));
       } catch {
         if (cancelled) return;
-        setUploads(demoStickers);
+        setUploads(readRecentUploads());
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -39,6 +47,12 @@ export default function ProfilePage() {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  useEffect(() => {
+    return subscribeStickerCreated((sticker) => {
+      setUploads((current) => mergeRecentUploads([sticker, ...current]));
+    });
   }, []);
 
   const username = session?.user.email?.split('@')[0] || 'guest';

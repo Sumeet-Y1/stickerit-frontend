@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { CloudUpload, Lock, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLoginPrompt } from '../context/LoginPromptContext';
-import { uploadSticker } from '../lib/backend';
+import { rememberRecentUpload, uploadSticker } from '../lib/backend';
 import { toast } from 'sonner';
 
 const CATEGORIES = ['Meme', 'Chaos', 'Reaction', 'Cute', 'Weird'];
@@ -57,6 +57,7 @@ export default function UploadPage() {
         file,
       });
 
+      rememberRecentUpload(next);
       toast.success('Sticker uploaded');
       navigate(`/sticker/${next.id}`);
     } catch (submitError) {

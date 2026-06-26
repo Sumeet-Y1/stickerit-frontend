@@ -9,11 +9,12 @@ import { useLoginPrompt } from '../context/LoginPromptContext';
 import { useStickerInteractions } from '../hooks/useStickerInteractions';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import {
-  demoStickers,
   downloadStickerFile,
   getStickerFeed,
+  mergeRecentUploads,
   searchStickers,
   shareUrl,
+  subscribeStickerCreated,
   type StickerResponse,
 } from '../lib/backend';
 import { toast } from 'sonner';
@@ -60,6 +61,16 @@ export default function ExplorePage() {
   }, []);
 
   useEffect(() => {
+    setStickers((current) => mergeRecentUploads(current));
+  }, []);
+
+  useEffect(() => {
+    return subscribeStickerCreated((sticker) => {
+      setStickers((current) => mergeRecentUploads([sticker, ...current]));
+    });
+  }, []);
+
+  useEffect(() => {
     const trimmed = query.trim();
     let cancelled = false;
 
@@ -72,17 +83,17 @@ export default function ExplorePage() {
         if (trimmed) {
           const results = await searchStickers(trimmed);
           if (cancelled || !mountedRef.current) return;
-          setStickers(results);
+          setStickers(mergeRecentUploads(results));
           setHasMore(false);
         } else {
           const response = await getStickerFeed(0, PAGE_SIZE);
           if (cancelled || !mountedRef.current) return;
-          setStickers(response.content);
+          setStickers(mergeRecentUploads(response.content));
           setHasMore(Boolean(response.last === false && response.content.length >= PAGE_SIZE));
         }
       } catch (requestError) {
         if (cancelled || !mountedRef.current) return;
-        setStickers(demoStickers.filter((sticker) => matchesSearch(sticker, trimmed)));
+        setStickers(mergeRecentUploads([]));
         setHasMore(false);
         setError(requestError instanceof Error ? requestError.message : 'Sticker feed unavailable');
       } finally {
@@ -112,7 +123,7 @@ export default function ExplorePage() {
       try {
         const response = await getStickerFeed(page, PAGE_SIZE);
         if (cancelled || !mountedRef.current) return;
-        setStickers((current) => [...current, ...response.content]);
+        setStickers((current) => mergeRecentUploads([...current, ...response.content]));
         setHasMore(Boolean(response.last === false && response.content.length >= PAGE_SIZE));
       } catch {
         if (!cancelled && mountedRef.current) setHasMore(false);
@@ -234,7 +245,7 @@ export default function ExplorePage() {
         <div className="mx-auto max-w-[1280px]">
           {error && (
             <div className="mb-6 rounded-[1.5rem] border-[3px] border-black bg-[#ef84d8] px-5 py-4 text-sm font-black shadow-[5px_5px_0_#111]">
-              Showing fallback stickers while the API wakes up.
+              Feed is having a hiccup. Your recent uploads stay pinned to the top.
             </div>
           )}
 

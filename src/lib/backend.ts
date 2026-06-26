@@ -124,6 +124,8 @@ const SESSION_KEY = 'stickerit:session';
 const LIKED_KEY = 'stickerit:liked';
 const SAVED_KEY = 'stickerit:saved';
 const RETURN_KEY = 'stickerit:returnTo';
+const RECENT_UPLOADS_KEY = 'stickerit:recentUploads';
+const STICKER_CREATED_EVENT = 'stickerit:sticker-created';
 
 const hasWindow = typeof window !== 'undefined';
 
@@ -158,12 +160,46 @@ export const writeSession = (session: AuthSession | null) => {
 
 export const readLikedStickerIds = () => storage.get<string[]>(LIKED_KEY, []);
 export const readSavedStickerIds = () => storage.get<string[]>(SAVED_KEY, []);
+export const readRecentUploads = () => storage.get<StickerResponse[]>(RECENT_UPLOADS_KEY, []);
 
 export const toggleStoredId = (key: string, id: string) => {
   const current = storage.get<string[]>(key, []);
   const next = current.includes(id) ? current.filter((item) => item !== id) : [id, ...current];
   storage.set(key, next);
   return next;
+};
+
+export const rememberRecentUpload = (sticker: StickerResponse) => {
+  const current = readRecentUploads();
+  const next = [sticker, ...current.filter((item) => item.id !== sticker.id)].slice(0, 25);
+  storage.set(RECENT_UPLOADS_KEY, next);
+  if (hasWindow) {
+    window.dispatchEvent(new CustomEvent<StickerResponse>(STICKER_CREATED_EVENT, { detail: sticker }));
+  }
+  return next;
+};
+
+export const mergeRecentUploads = (stickers: StickerResponse[]) => {
+  const recent = readRecentUploads();
+  const byId = new Map<string, StickerResponse>();
+  [...recent, ...stickers].forEach((sticker) => {
+    byId.set(sticker.id, sticker);
+  });
+  return Array.from(byId.values());
+};
+
+export const subscribeStickerCreated = (listener: (sticker: StickerResponse) => void) => {
+  if (!hasWindow) {
+    return () => {};
+  }
+
+  const handler = (event: Event) => {
+    const customEvent = event as CustomEvent<StickerResponse>;
+    listener(customEvent.detail);
+  };
+
+  window.addEventListener(STICKER_CREATED_EVENT, handler);
+  return () => window.removeEventListener(STICKER_CREATED_EVENT, handler);
 };
 
 export const setPendingReturnTo = (value: string | null) => {
