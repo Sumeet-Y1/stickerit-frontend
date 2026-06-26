@@ -1,73 +1,94 @@
-import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router';
+import { Chrome, Github, UploadCloud, UserRound } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useLoginPrompt } from '../context/LoginPromptContext';
 import { authUrl } from '../lib/backend';
 
+const navItems = [
+  { label: 'Home', to: '/' },
+  { label: 'Explore', to: '/explore' },
+  { label: 'Upload', to: '/upload' },
+  { label: 'Profile', to: '/profile' },
+];
+
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > window.innerHeight * 0.5);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const navigate = useNavigate();
+  const { session, authenticated } = useAuth();
+  const { openLoginPrompt } = useLoginPrompt();
+  const location = useLocation();
+  const returnTo = `${location.pathname}${location.search}${location.hash}`;
 
   return (
-    <nav
-      className="sticky top-0 z-40 transition-all duration-300"
-      style={{
-        background: scrolled ? 'rgba(245, 240, 232, 0.95)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(8px)' : 'none',
-      }}
-    >
-      <div className="flex items-center justify-between px-6 md:px-12 py-5">
-        {/* Logo */}
-        <div
-          className="font-mono text-lg uppercase tracking-[0.1em]"
-          style={{ color: '#2A5040' }}
-        >
+    <header className="sticky top-0 z-50 border-b-[3px] border-black bg-white">
+      <div className="mx-auto flex max-w-[1280px] flex-wrap items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
+        <Link to="/" className="rounded-full bg-black px-5 py-3 text-sm font-black uppercase tracking-[0.12em] text-white">
           StickerIT
-        </div>
+        </Link>
 
-        {/* Nav Links - hidden on mobile */}
-        <div className="hidden md:flex items-center gap-8">
-          {['Explore', 'Creators', 'Trending'].map((link) => (
-            <a
-              key={link}
-              href={`#${link.toLowerCase()}`}
-              className="font-mono text-[11px] uppercase tracking-[0.1em] transition-colors hover:text-coral"
-              style={{ color: '#2A5040' }}
-            >
-              {link}
-            </a>
-          ))}
-        </div>
+        <nav className="flex flex-1 flex-wrap items-center justify-center gap-2">
+          {navItems.map((item) => {
+            const active = location.pathname === item.to;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`rounded-full border-2 border-black px-4 py-2 text-xs font-black uppercase tracking-[0.08em] transition-transform hover:-translate-y-0.5 ${
+                  active ? 'bg-[#ffd044] text-black' : 'bg-white text-black'
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
 
-        {/* CTA */}
-        <div className="flex items-center gap-3">
-          <a
-            href={authUrl('github')}
-            className="font-mono text-xs uppercase tracking-[0.08em] px-4 py-2 rounded-full transition-colors hover:opacity-90"
-            style={{
-              background: '#2A5040',
-              color: '#F5F0E8',
-            }}
-          >
-            GitHub
-          </a>
-          <a
-            href={authUrl('google')}
-            className="font-mono text-xs uppercase tracking-[0.08em] px-4 py-2 rounded-full transition-colors hover:opacity-90"
-            style={{
-              background: '#E8604C',
-              color: '#F5F0E8',
-            }}
-          >
-            Google
-          </a>
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+          {authenticated ? (
+            <>
+              <button
+                type="button"
+                onClick={() => navigate('/profile')}
+                className="inline-flex items-center gap-2 rounded-full border-2 border-black bg-[#78e5bd] px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-black"
+              >
+                <UserRound size={14} />
+                {session?.user.email.split('@')[0]}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/upload')}
+                className="inline-flex items-center gap-2 rounded-full border-2 border-black bg-[#ef84d8] px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-black"
+              >
+                <UploadCloud size={14} />
+                Upload
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => openLoginPrompt('Log in to upload, like, and save stickers.', returnTo)}
+                className="rounded-full border-2 border-black bg-[#ffd044] px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-black"
+              >
+                Log in
+              </button>
+              <a
+                href={authUrl('github')}
+                className="inline-flex items-center gap-2 rounded-full border-2 border-black bg-black px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-white"
+              >
+                <Github size={14} />
+                GitHub
+              </a>
+              <a
+                href={authUrl('google')}
+                className="inline-flex items-center gap-2 rounded-full border-2 border-black bg-[#ef84d8] px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-black"
+              >
+                <Chrome size={14} />
+                Google
+              </a>
+            </>
+          )}
         </div>
       </div>
-    </nav>
+    </header>
   );
 }

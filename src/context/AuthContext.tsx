@@ -1,13 +1,16 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import {
+  clearOAuthSessionFromLocation,
   consumeReturnTo,
   loginWithPassword,
   logoutSession,
   readSession,
+  readOAuthSessionFromLocation,
   registerWithPassword,
   refreshSession,
   rememberRoute,
+  writeSession,
   startOAuthLogin,
   type AuthProvider,
   type AuthSession,
@@ -38,10 +41,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const bootstrap = async () => {
+      const oauthSession = readOAuthSessionFromLocation();
+      if (oauthSession) {
+        clearOAuthSessionFromLocation();
+        writeSession(oauthSession);
+        if (mounted) {
+          setSession(oauthSession);
+          setReady(true);
+        }
+        return;
+      }
+
       const current = readSession();
       if (current) {
+        const refreshed = await refreshSession();
         if (mounted) {
-          setSession(current);
+          setSession(refreshed ?? null);
           setReady(true);
         }
         return;

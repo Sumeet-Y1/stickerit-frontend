@@ -195,6 +195,59 @@ export const shareUrl = (token: string) => (hasWindow ? `${window.location.origi
 
 export const authUrl = (provider: AuthProvider) => publicUrl(`/oauth2/authorization/${provider}`);
 
+export const readOAuthSessionFromLocation = (): AuthSession | null => {
+  if (!hasWindow) return null;
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
+  const hashParams = hash ? new URLSearchParams(hash) : null;
+  const params = ['accessToken', 'refreshToken', 'tokenType', 'expiresInSeconds', 'userId', 'userEmail', 'userRoles']
+    .reduce((acc, key) => {
+      const value = searchParams.get(key) ?? hashParams?.get(key);
+      if (value != null) {
+        acc.set(key, value);
+      }
+      return acc;
+    }, new URLSearchParams());
+  const accessToken = params.get('accessToken');
+  const refreshToken = params.get('refreshToken');
+  const tokenType = params.get('tokenType');
+  const expiresInSeconds = params.get('expiresInSeconds');
+  const userId = params.get('userId');
+  const userEmail = params.get('userEmail');
+  const userRoles = params.get('userRoles');
+
+  if (!accessToken || !refreshToken || !tokenType || !expiresInSeconds || !userId || !userEmail || !userRoles) {
+    return null;
+  }
+
+  const roles = userRoles
+    .split(',')
+    .map((role) => role.trim())
+    .filter(Boolean);
+
+  return {
+    accessToken,
+    refreshToken,
+    tokenType,
+    expiresInSeconds: Number(expiresInSeconds),
+    user: {
+      id: userId,
+      email: userEmail,
+      roles,
+    },
+  };
+};
+
+export const clearOAuthSessionFromLocation = () => {
+  if (!hasWindow || (!window.location.hash && !window.location.search)) return;
+
+  const url = new URL(window.location.href);
+  url.search = '';
+  url.hash = '';
+  window.history.replaceState({}, document.title, url.toString());
+};
+
 export const downloadStickerFile = async (sticker: Pick<StickerResponse, 'id' | 'name' | 'originalFilename'>) => {
   if (!hasWindow) return;
 
@@ -308,6 +361,7 @@ export async function apiFetch<T>(
     if (refreshed?.accessToken) {
       return apiFetch<T>(path, options, { ...config, retry: true });
     }
+    writeSession(null);
   }
 
   if (!response.ok) {
@@ -318,16 +372,16 @@ export async function apiFetch<T>(
 }
 
 export const getStickerFeed = (page = 0, size = 24) =>
-  apiFetch<PageResponse<StickerResponse>>(`/api/stickers?page=${page}&size=${size}`);
+  apiFetch<PageResponse<StickerResponse>>(`/api/stickers?page=${page}&size=${size}`, {}, { auth: false });
 
 export const searchStickers = (query: string) =>
-  apiFetch<StickerResponse[]>(`/api/stickers/search?q=${encodeURIComponent(query)}`);
+  apiFetch<StickerResponse[]>(`/api/stickers/search?q=${encodeURIComponent(query)}`, {}, { auth: false });
 
 export const getStickerById = (id: string) =>
-  apiFetch<StickerResponse>(`/api/stickers/${id}`);
+  apiFetch<StickerResponse>(`/api/stickers/${id}`, {}, { auth: false });
 
 export const resolveSharedSticker = (token: string) =>
-  apiFetch<StickerResponse>(`/s/${token}`);
+  apiFetch<StickerResponse>(`/s/${token}`, {}, { auth: false });
 
 export const uploadSticker = (payload: UploadPayload) => {
   const formData = new FormData();
