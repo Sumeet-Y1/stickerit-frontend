@@ -8,6 +8,8 @@ import { useLoginPrompt } from '../context/LoginPromptContext';
 import { useStickerInteractions } from '../hooks/useStickerInteractions';
 import {
   demoStickers,
+  deleteSticker,
+  displayNameFromEmail,
   downloadStickerFile,
   getStickerById,
   getStickerFeed,
@@ -27,7 +29,7 @@ export default function StickerDetailPage({ tokenMode = false }: StickerDetailPa
   const params = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { authenticated } = useAuth();
+  const { authenticated, session } = useAuth();
   const { openLoginPrompt } = useLoginPrompt();
   const { likedIds, savedIds, toggleLike, toggleSave } = useStickerInteractions();
   const [sticker, setSticker] = useState<StickerResponse | null>(null);
@@ -39,6 +41,7 @@ export default function StickerDetailPage({ tokenMode = false }: StickerDetailPa
   const state = location.state as { backgroundLocation?: Location } | null;
   const backgroundLocation = state?.backgroundLocation;
   const seededSticker = (location.state as { sticker?: StickerResponse } | null)?.sticker ?? null;
+  const currentEmail = session?.user.email?.toLowerCase() ?? '';
 
   useEffect(() => {
     let cancelled = false;
@@ -132,6 +135,20 @@ export default function StickerDetailPage({ tokenMode = false }: StickerDetailPa
   const handleDownload = () => {
     if (!sticker) return;
     downloadStickerFile(sticker);
+  };
+
+  const handleDelete = async () => {
+    if (!sticker) return;
+    const confirmed = window.confirm(`Delete ${sticker.name}? This cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      await deleteSticker(sticker.id);
+      toast.success('Sticker deleted');
+      closeModal();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Delete failed');
+    }
   };
 
   const handleLike = () => {
@@ -310,13 +327,24 @@ export default function StickerDetailPage({ tokenMode = false }: StickerDetailPa
                           Download
                         </span>
                       </button>
+                      {sticker.owner.email.toLowerCase() === currentEmail && (
+                        <button
+                          type="button"
+                          onClick={handleDelete}
+                          className="rounded-full border border-[#ff4d4d]/40 bg-[#ff4d4d]/20 px-4 py-3 text-[11px] font-black uppercase tracking-[0.24em] text-white hover:bg-[#ff4d4d]/30"
+                        >
+                          <span className="inline-flex items-center gap-2">
+                            Delete
+                          </span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
                   <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
                       <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/50">Owner</p>
-                      <p className="mt-2 text-lg font-black">{sticker.owner.email}</p>
+                      <p className="mt-2 text-lg font-black">{displayNameFromEmail(sticker.owner.email)}</p>
                     </div>
                     <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
                       <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/50">Size</p>

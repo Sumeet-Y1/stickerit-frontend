@@ -7,6 +7,8 @@ import { useAuth } from '../context/AuthContext';
 import { useLoginPrompt } from '../context/LoginPromptContext';
 import { useStickerInteractions } from '../hooks/useStickerInteractions';
 import {
+  deleteSticker,
+  displayNameFromEmail,
   downloadStickerFile,
   getStickerFeed,
   mergeRecentUploads,
@@ -25,6 +27,7 @@ export default function ProfilePage() {
   const { likedIds, savedIds, toggleLike, toggleSave } = useStickerInteractions();
   const [uploads, setUploads] = useState<StickerResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const currentEmail = session?.user.email?.toLowerCase() ?? '';
 
   useEffect(() => {
     let cancelled = false;
@@ -54,13 +57,26 @@ export default function ProfilePage() {
     };
   }, []);
 
-  const username = session?.user.email?.split('@')[0] || 'guest';
+  const username = displayNameFromEmail(session?.user.email);
   const myUploads = useMemo(() => {
-    if (!session?.user.email) return [];
-    return uploads.filter((item) => item.owner.email.toLowerCase() === session.user.email.toLowerCase());
-  }, [session?.user.email, uploads]);
+    if (!currentEmail) return [];
+    return uploads.filter((item) => item.owner.email.toLowerCase() === currentEmail);
+  }, [currentEmail, uploads]);
   const mySaved = useMemo(() => uploads.filter((item) => savedIds.includes(item.id)), [savedIds, uploads]);
   const myLiked = useMemo(() => uploads.filter((item) => likedIds.includes(item.id)), [likedIds, uploads]);
+
+  const handleDeleteSticker = async (item: StickerResponse) => {
+    const confirmed = window.confirm(`Delete ${item.name}? This cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      await deleteSticker(item.id);
+      setUploads((current) => current.filter((sticker) => sticker.id !== item.id));
+      toast.success('Sticker deleted');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Delete failed');
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -158,9 +174,9 @@ export default function ProfilePage() {
                 ))}
               </div>
             ) : myUploads.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="columns-1 gap-5 md:columns-2 xl:columns-3">
                 {myUploads.map((item) => (
-                  <div key={item.id} className="h-full">
+                  <div key={item.id} className="mb-5 break-inside-avoid">
                     <StickerCard
                       sticker={item}
                       liked={likedIds.includes(item.id)}
@@ -169,6 +185,8 @@ export default function ProfilePage() {
                       onSave={() => toggleSave(item.id)}
                       onShare={() => navigator.clipboard.writeText(shareUrl(item.shareToken))}
                       onDownload={() => downloadStickerFile(item)}
+                      onDelete={() => handleDeleteSticker(item)}
+                      canDelete
                       onOpen={() =>
                         navigate(`/sticker/${item.id}`, {
                           state: { backgroundLocation: location, sticker: item },
@@ -188,9 +206,9 @@ export default function ProfilePage() {
           <section>
             <h2 className="mb-5 text-2xl font-black uppercase tracking-tight">Saved stickers</h2>
             {mySaved.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="columns-1 gap-5 md:columns-2 xl:columns-3">
                 {mySaved.map((item) => (
-                  <div key={item.id} className="h-full">
+                  <div key={item.id} className="mb-5 break-inside-avoid">
                     <StickerCard
                       sticker={item}
                       liked={likedIds.includes(item.id)}

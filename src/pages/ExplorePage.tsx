@@ -8,7 +8,16 @@ import { useAuth } from '../context/AuthContext';
 import { useLoginPrompt } from '../context/LoginPromptContext';
 import { useStickerInteractions } from '../hooks/useStickerInteractions';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
-import { downloadStickerFile, getStickerFeed, mergeRecentUploads, readRecentUploads, searchStickers, shareUrl, type StickerResponse } from '../lib/backend';
+import {
+  displayNameFromEmail,
+  downloadStickerFile,
+  getStickerFeed,
+  mergeRecentUploads,
+  readRecentUploads,
+  searchStickers,
+  shareUrl,
+  type StickerResponse,
+} from '../lib/backend';
 import { toast } from 'sonner';
 
 const DEFAULT_CATEGORIES = ['All', 'Meme', 'Chaos', 'Reaction', 'Cute', 'Weird'];
@@ -22,7 +31,14 @@ function matchesCategory(sticker: StickerResponse, category: string) {
 function matchesSearch(sticker: StickerResponse, query: string) {
   const needle = query.trim().toLowerCase();
   if (!needle) return true;
-  return [sticker.name, sticker.description, sticker.category, sticker.tags.join(' '), sticker.owner.email]
+  return [
+    sticker.name,
+    sticker.description,
+    sticker.category,
+    sticker.tags.join(' '),
+    sticker.owner.email,
+    displayNameFromEmail(sticker.owner.email),
+  ]
     .join(' ')
     .toLowerCase()
     .includes(needle);
@@ -230,9 +246,9 @@ export default function ExplorePage() {
             </div>
           ) : filtered.length > 0 ? (
             <>
-              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              <div className="columns-1 gap-5 sm:columns-2 xl:columns-3 2xl:columns-4">
                 {filtered.map((sticker, index) => (
-                  <div key={sticker.id} className="h-full">
+                  <div key={sticker.id} className="mb-5 break-inside-avoid">
                     <StickerCard
                       sticker={sticker}
                       liked={likedIds.includes(sticker.id)}

@@ -1,4 +1,4 @@
-import { Bookmark, Download, Heart, Share2 } from 'lucide-react';
+import { Bookmark, Download, Heart, Share2, Trash2 } from 'lucide-react';
 import type { StickerResponse } from '../lib/backend';
 
 interface StickerCardProps {
@@ -10,6 +10,8 @@ interface StickerCardProps {
   onShare: () => void;
   onDownload: () => void;
   onOpen: () => void;
+  onDelete?: () => void;
+  canDelete?: boolean;
   accentIndex?: number;
 }
 
@@ -30,6 +32,8 @@ export default function StickerCard({
   onShare,
   onDownload,
   onOpen,
+  onDelete,
+  canDelete = false,
   accentIndex = 0,
 }: StickerCardProps) {
   const rotation = pickRotation(sticker.id);
@@ -132,6 +136,19 @@ export default function StickerCard({
         >
           <Download size={16} />
         </button>
+        {canDelete && onDelete && (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onDelete();
+            }}
+            className="rounded-full border-2 border-black bg-[#ff5d5d] px-3 py-2 text-black transition-transform hover:-translate-y-0.5"
+            aria-label={`Delete ${sticker.name}`}
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
       </div>
     </article>
   );

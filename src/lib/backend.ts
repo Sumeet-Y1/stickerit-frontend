@@ -39,6 +39,12 @@ export interface UserSummary {
   roles: string[];
 }
 
+export const displayNameFromEmail = (email?: string | null) => {
+  if (!email) return 'guest';
+  const name = email.split('@')[0]?.trim();
+  return name || 'guest';
+};
+
 export interface StickerResponse {
   id: string;
   name: string;
