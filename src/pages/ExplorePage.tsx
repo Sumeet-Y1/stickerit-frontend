@@ -9,7 +9,6 @@ import { useLoginPrompt } from '../context/LoginPromptContext';
 import { useStickerInteractions } from '../hooks/useStickerInteractions';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import {
-  displayNameFromEmail,
   downloadStickerFile,
   getStickerFeed,
   mergeRecentUploads,
@@ -36,8 +35,7 @@ function matchesSearch(sticker: StickerResponse, query: string) {
     sticker.description,
     sticker.category,
     sticker.tags.join(' '),
-    sticker.owner.email,
-    displayNameFromEmail(sticker.owner.email),
+    sticker.owner.username,
   ]
     .join(' ')
     .toLowerCase()

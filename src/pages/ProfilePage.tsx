@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { BookHeart, LogOut, Sparkles, UploadCloud } from 'lucide-react';
+import { BookHeart, Check, Edit3, LogOut, Sparkles, UploadCloud } from 'lucide-react';
 import StickerCard from '../components/StickerCard';
 import SkeletonCard from '../components/SkeletonCard';
 import { useAuth } from '../context/AuthContext';
@@ -8,7 +8,6 @@ import { useLoginPrompt } from '../context/LoginPromptContext';
 import { useStickerInteractions } from '../hooks/useStickerInteractions';
 import {
   deleteSticker,
-  displayNameFromEmail,
   downloadStickerFile,
   getStickerFeed,
   mergeRecentUploads,
@@ -22,12 +21,19 @@ import { toast } from 'sonner';
 export default function ProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { session, authenticated, logout } = useAuth();
+  const { session, authenticated, logout, updateUsername: syncUsername } = useAuth();
   const { openLoginPrompt } = useLoginPrompt();
   const { likedIds, savedIds, toggleLike, toggleSave } = useStickerInteractions();
   const [uploads, setUploads] = useState<StickerResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const currentEmail = session?.user.email?.toLowerCase() ?? '';
+  const [username, setUsername] = useState(session?.user.username ?? '');
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [savingUsername, setSavingUsername] = useState(false);
+  const currentUserId = session?.user.id ?? '';
+
+  useEffect(() => {
+    setUsername(session?.user.username ?? '');
+  }, [session?.user.username]);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,11 +63,10 @@ export default function ProfilePage() {
     };
   }, []);
 
-  const username = displayNameFromEmail(session?.user.email);
   const myUploads = useMemo(() => {
-    if (!currentEmail) return [];
-    return uploads.filter((item) => item.owner.email.toLowerCase() === currentEmail);
-  }, [currentEmail, uploads]);
+    if (!currentUserId) return [];
+    return uploads.filter((item) => item.owner.id === currentUserId);
+  }, [currentUserId, uploads]);
   const mySaved = useMemo(() => uploads.filter((item) => savedIds.includes(item.id)), [savedIds, uploads]);
   const myLiked = useMemo(() => uploads.filter((item) => likedIds.includes(item.id)), [likedIds, uploads]);
 
@@ -75,6 +80,35 @@ export default function ProfilePage() {
       toast.success('Sticker deleted');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Delete failed');
+    }
+  };
+
+  const handleUsernameSave = async () => {
+    const nextUsername = username.trim();
+    if (!nextUsername) {
+      setUsernameError('Username is required');
+      return;
+    }
+
+    setSavingUsername(true);
+    setUsernameError(null);
+
+    try {
+      const nextSession = await syncUsername({ username: nextUsername });
+      const savedUsername = nextSession?.user.username || nextUsername;
+      setUsername(savedUsername);
+      setUploads((current) =>
+        current.map((item) =>
+          item.owner.id === currentUserId
+            ? { ...item, owner: { ...item.owner, username: savedUsername } }
+            : item
+        )
+      );
+      toast.success('Username updated');
+    } catch (error) {
+      setUsernameError(error instanceof Error ? error.message : 'Username update failed');
+    } finally {
+      setSavingUsername(false);
     }
   };
 
@@ -150,6 +184,55 @@ export default function ProfilePage() {
             </div>
           ))}
         </div>
+
+        <section className="mt-8 rounded-[2rem] border border-white/10 bg-white/5 p-5">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/50">Account</p>
+              <h2 className="mt-2 text-2xl font-black uppercase tracking-tight">Public username</h2>
+              <p className="mt-2 text-sm text-white/65">
+                This is what people see on sticker cards and in the feed. Your email stays private to your login.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white/70">
+              <span className="block text-[10px] font-black uppercase tracking-[0.25em] text-white/40">Signed in email</span>
+              <span className="mt-1 block font-semibold text-white">{session?.user.email}</span>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <label className="flex-1">
+              <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.25em] text-white/50">Username</span>
+              <input
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none focus:border-[#4da3ff]/60"
+                placeholder="your-handle"
+                maxLength={64}
+              />
+            </label>
+            <button
+              type="button"
+              onClick={handleUsernameSave}
+              disabled={savingUsername}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#4da3ff] px-5 py-3 text-sm font-black uppercase tracking-[0.24em] text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Edit3 size={14} />
+              {savingUsername ? 'Saving...' : 'Save name'}
+            </button>
+          </div>
+
+          {usernameError && (
+            <div className="mt-3 rounded-2xl border border-[#ff4d4d]/40 bg-[#ff4d4d]/15 px-4 py-3 text-sm text-[#ffb3b3]">
+              {usernameError}
+            </div>
+          )}
+
+          <p className="mt-3 inline-flex items-center gap-2 rounded-full border border-[#36d399]/25 bg-[#36d399]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-[#36d399]">
+            <Check size={12} />
+            Current public name: {session?.user.username}
+          </p>
+        </section>
 
         <div className="mt-10 space-y-10">
           <section>

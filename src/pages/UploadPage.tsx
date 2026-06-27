@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { CloudUpload, Lock, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLoginPrompt } from '../context/LoginPromptContext';
-import { displayNameFromEmail, rememberRecentUpload, uploadSticker } from '../lib/backend';
+import { rememberRecentUpload, uploadSticker } from '../lib/backend';
 import { toast } from 'sonner';
 
 const CATEGORIES = ['Meme', 'Chaos', 'Reaction', 'Cute', 'Weird'];
@@ -171,7 +171,7 @@ export default function UploadPage() {
 
             {authenticated && session && (
               <p className="mt-3 text-center text-xs uppercase tracking-[0.22em] text-white/45">
-                Logged in as {displayNameFromEmail(session.user.email)}
+                Logged in as {session.user.username}
               </p>
             )}
           </form>

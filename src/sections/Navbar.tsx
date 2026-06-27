@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import { Chrome, Github, UploadCloud, UserRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLoginPrompt } from '../context/LoginPromptContext';
-import { authUrl, displayNameFromEmail } from '../lib/backend';
+import { authUrl } from '../lib/backend';
 
 const navItems = [
   { label: 'Home', to: '/' },
@@ -51,7 +51,7 @@ export default function Navbar() {
                 className="inline-flex items-center gap-2 rounded-full border-2 border-black bg-[#78e5bd] px-4 py-2 text-xs font-black uppercase tracking-[0.08em] text-black"
               >
                 <UserRound size={14} />
-                {displayNameFromEmail(session?.user.email)}
+                {session?.user.username || 'profile'}
               </button>
               <button
                 type="button"

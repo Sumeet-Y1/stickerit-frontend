@@ -11,12 +11,14 @@ import {
   registerWithPassword,
   refreshSession,
   rememberRoute,
+  updateUsername as updateUsernameRequest,
   writeSession,
   startOAuthLogin,
   type AuthProvider,
   type AuthSession,
   type LoginPayload,
   type RegisterPayload,
+  type UpdateUsernamePayload,
 } from '../lib/backend';
 
 interface AuthContextValue {
@@ -24,6 +26,7 @@ interface AuthContextValue {
   ready: boolean;
   login: (payload: LoginPayload) => Promise<AuthSession>;
   register: (payload: RegisterPayload) => Promise<AuthSession>;
+  updateUsername: (payload: UpdateUsernamePayload) => Promise<AuthSession | null>;
   logout: () => Promise<void>;
   signInWithOAuth: (provider: AuthProvider, returnTo: string) => void;
   restoreReturnTo: () => string | null;
@@ -33,6 +36,21 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+const normalizeSessionUsername = (session: AuthSession | null): AuthSession | null => {
+  if (!session) return null;
+  if (session.user.username) return session;
+  const fallback = session.user.email.split('@')[0]?.trim() || 'guest';
+  const next = {
+    ...session,
+    user: {
+      ...session.user,
+      username: fallback,
+    },
+  };
+  writeSession(next);
+  return next;
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(() => readSession());
@@ -45,9 +63,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const oauthSession = readOAuthSessionFromLocation();
       if (oauthSession) {
         clearOAuthSessionFromLocation();
-        writeSession(oauthSession);
+        const normalized = normalizeSessionUsername(oauthSession);
         if (mounted) {
-          setSession(oauthSession);
+          setSession(normalized);
           setReady(true);
         }
         return;
@@ -55,9 +73,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const current = readSession();
       if (current) {
+        const normalizedCurrent = normalizeSessionUsername(current);
         if (!isJwtExpiringSoon(current.accessToken, 90)) {
           if (mounted) {
-            setSession(current);
+            setSession(normalizedCurrent);
             setReady(true);
           }
           return;
@@ -65,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const refreshed = await refreshSession();
         if (mounted) {
-          setSession(refreshed ?? current);
+          setSession(normalizeSessionUsername(refreshed ?? normalizedCurrent));
           setReady(true);
         }
         return;
@@ -73,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const refreshed = await refreshSession();
       if (mounted) {
-        setSession(refreshed);
+        setSession(normalizeSessionUsername(refreshed));
         setReady(true);
       }
     };
@@ -100,6 +119,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     register: async (payload: RegisterPayload) => {
       const next = await registerWithPassword(payload);
+      syncSession(next);
+      return next;
+    },
+    updateUsername: async (payload: UpdateUsernamePayload) => {
+      await updateUsernameRequest(payload);
+      const next = normalizeSessionUsername(readSession());
       syncSession(next);
       return next;
     },

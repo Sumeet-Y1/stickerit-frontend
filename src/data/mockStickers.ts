@@ -2,8 +2,7 @@ import type { StickerResponse } from '../lib/backend';
 
 const owner = {
   id: 'demo-owner',
-  email: 'demo@stickerit.app',
-  roles: ['ROLE_USER'],
+  username: 'demo',
 };
 
 export const demoStickers: StickerResponse[] = [
